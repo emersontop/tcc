@@ -1,0 +1,12 @@
+login: rasp1
+senha: admin
+ip:172.22.73.8
+conexão_ssh: ssh rasp1@172.22.73.8
+
+comando para transferir diretórios
+sudo scp -r obelix rasp1@172.22.73.8:\catkin_ws/src
+
+comando transferir aqruivos
+ sudo scp servo.py rasp1@172.22.73.8:\catkin_ws/src/obelix/src
+
+source ~/catkin_ws/devel/setup.bash
