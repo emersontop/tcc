@@ -1,111 +1,135 @@
-# Python Script
-# https://www.electronicshub.org/raspberry-pi-l298n-interface-tutorial-control-dc-motor-l298n-raspberry-pi/
+#!/usr/bin/python3
 
-import RPi.GPIO as GPIO          
-from time import sleep
+import rospy        ##biblioteca para ros
+from std_msgs.msg import Int32       #biblioteca de mensagens ros
+import RPi.GPIO as GPIO     #biblioteca para a raspybarry  
+from time import sleep      #biblioteca para trabalhar com o tempo
 
-in1 = 23
-in2 = 24
-in3 = 22
-in4 = 27
-ena = 25
-enb = 26
+#variaveis globais
 
-temp1=1
+globalDirecao = 0          #recebe o comando da direção
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(in1,GPIO.OUT)
-GPIO.setup(in2,GPIO.OUT)
-GPIO.setup(in3,GPIO.OUT)
-GPIO.setup(in4,GPIO.OUT)
-GPIO.setup(ena,GPIO.OUT)
-GPIO.setup(enb,GPIO.OUT)
-GPIO.output(in1,GPIO.LOW)
-GPIO.output(in2,GPIO.LOW)
-GPIO.output(in3,GPIO.LOW)
-GPIO.output(in4,GPIO.LOW)
-p=GPIO.PWM(ena,1000)
-q=GPIO.PWM(enb,1000)
+class Nodelocomocao():
+    """classe node ros da locomoção, responsável por gerenciar as mensagens do sistema da locomoção"""
+    def __init__ (self):
+        self.direcao = Int32()          #Instancia a variável da direção
 
-p.start(25)
-q.start(26)
-print("\n")
-print("The default speed & direction of motor is LOW & Forward.....")
-print("r-run s-stop f-forward b-backward l-low m-medium h-high e-exit")
-print("\n")    
+        self.subdirecao = rospy.Subscriber('tpclocomocao', Int32, self.callbacklocomocao)
 
-while(1):
-
-    x=input()
-    
-    if x=='r':
-        print("run")
-        if(temp1==1):
-            GPIO.output(in1,GPIO.HIGH)
-            GPIO.output(in2,GPIO.LOW)
-            GPIO.output(in3,GPIO.HIGH)
-            GPIO.output(in4,GPIO.LOW)
-            print("forward")
-            x='z'
-        else:
-            GPIO.output(in1,GPIO.LOW)
-            GPIO.output(in2,GPIO.HIGH)
-            GPIO.output(in3,GPIO.LOW)
-            GPIO.output(in4,GPIO.HIGH)
-            print("backward")
-            x='z'
+    def callbacklocomocao(self,msgLocomocao):
+        global globalDirecao
+        self.direcao = msgLocomocao
+        globalDirecao = self.direcao
+        print("Mensagem recebida: ",globalDirecao)
 
 
-    elif x=='s':
-        print("stop")
-        GPIO.output(in1,GPIO.LOW)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.LOW)
-        GPIO.output(in4,GPIO.LOW)
-        x='z'
+class Locomocao():
+    def __init__(self):
+        self.in1 = 23
+        self.in2 = 24
+        self.in3 = 22
+        self.in4 = 27
+        self.ena = 25
+        self.enb = 26
 
-    elif x=='f':
+        self.estado = Int32()       #controla o estado do robo
+        self.speedRodas = Int32()   #Controla a velocidade do robo
+
+        #Definição dos pinos
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.in1,GPIO.OUT)
+        GPIO.setup(self.in2,GPIO.OUT)
+        GPIO.setup(self.in3,GPIO.OUT)
+        GPIO.setup(self.in4,GPIO.OUT)
+        GPIO.setup(self.ena,GPIO.OUT)
+        GPIO.setup(self.enb,GPIO.OUT)
+
+        #Configuração inicial dos pinos
+        GPIO.output(self.in1,GPIO.LOW)
+        GPIO.output(self.in2,GPIO.LOW)
+        GPIO.output(self.in3,GPIO.LOW)
+        GPIO.output(self.in4,GPIO.LOW)
+
+        self.motor1=GPIO.PWM(self.ena,1000)
+        self.motor2=GPIO.PWM(self.enb,1000)
+
+        self.motor1.start(25)
+        self.motor2.start(25)
+
+        print("\n")
+        print("Iniciando o sistema de locomoção")
+        print("Comandos :")
+        print("[r-run] [s-stop] [f-forward] [b-backward] [l-low] [m-medium] [h-high] [e-exit]")
+        print("\n")
+
+    def speed(self, speed=0):
+        """Define a velocidade do robô"""
+        #por enquanto a velocidade esta setada para 50
+        print("Velocidade das rodas configuradas para: ",speed)
+        self.speedRodas = speed
+        self.motor1.ChangeDutyCycle(50)
+        self.motor2.ChangeDutyCycle(50)
+
+    def forward(self):
+        """Move o robo para frente"""
         print("forward")
-        GPIO.output(in1,GPIO.HIGH)
-        GPIO.output(in2,GPIO.LOW)
-        GPIO.output(in3,GPIO.HIGH)
-        GPIO.output(in4,GPIO.LOW)
-        temp1=1
-        x='z'
+        GPIO.output(self.in1,GPIO.HIGH)
+        GPIO.output(self.in2,GPIO.LOW)
+        GPIO.output(self.in3,GPIO.HIGH)
+        GPIO.output(self.in4,GPIO.LOW)
+        sleep(2)
 
-    elif x=='b':
-        print("backward")
-        GPIO.output(in1,GPIO.LOW)
-        GPIO.output(in2,GPIO.HIGH)
-        GPIO.output(in3,GPIO.LOW)
-        GPIO.output(in4,GPIO.HIGH)
-        temp1=0
-        x='z'
+    def backward(self):
+        """Move o robo para traz"""
+        GPIO.output(self.in1,GPIO.LOW)
+        GPIO.output(self.in2,GPIO.HIGH)
+        GPIO.output(self.in3,GPIO.LOW)
+        GPIO.output(self.in4,GPIO.HIGH)
+        sleep(2)
 
-    elif x=='l':
-        print("low")
-        p.ChangeDutyCycle(25)
-        q.ChangeDutyCycle(25)
-        x='z'
+    def stop(self):
+        """Para o robo"""
+        print("stop")
+        GPIO.output(self.in1,GPIO.LOW)
+        GPIO.output(self.in2,GPIO.LOW)
+        GPIO.output(self.in3,GPIO.LOW)
+        GPIO.output(self.in4,GPIO.LOW)
+        sleep(2)
 
-    elif x=='m':
-        print("medium")
-        p.ChangeDutyCycle(50)
-        q.ChangeDutyCycle(50)
-        x='z'
+    def controle(self, direcao):
+        """Recebe a direção e chama os metodos ro robo"""
+        if(direcao == 1):
+            self.forward()
+        elif(direcao == 2):
+            self.backward()
+        else:
+            self.stop()
+            #print("Comando não conhecido! Tente outra vez!")
+            pass
+        
+        direcao=0       #Por segurança ele para
 
-    elif x=='h':
-        print("high")
-        p.ChangeDutyCycle(75)
-        q.ChangeDutyCycle(75)
-        x='z'
-     
-    
-    elif x=='e':
-        GPIO.cleanup()
-        print("GPIO Clean up")
-        break
-    
-    else:
-        print("<<<  wrong data  >>>")
-        print("please enter the defined data to continue.....")
+def main():
+    #garante o uso da variável global
+    global globalDirecao
+
+    #Setup ROS
+    rospy.init_node('locomocao')                #inicia o Node
+    rospy.loginfo('O node da locomoção iniciado!')
+
+    nodelocomocao = Nodelocomocao()         #instancia o node da locomoção
+
+    locomocao = Locomocao()                 #instancia a classe locomoção
+    locomocao.speed()
+
+    print("Teste")
+    while (not rospy.is_shutdown()):
+        try:
+            locomocao.controle(globalDirecao)
+
+        except KeyboardInterrupt():
+            print("Fim")
+
+
+if (__name__ == "__main__"):
+    main()
