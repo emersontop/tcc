@@ -18,9 +18,8 @@ class Nodelocomocao():
 
     def callbacklocomocao(self,msgLocomocao):
         global globalDirecao
-        self.direcao = msgLocomocao
+        self.direcao = msgLocomocao.data            #usa o .data para pegar o valor
         globalDirecao = self.direcao
-        print("Mensagem recebida: ",globalDirecao)
 
 
 class Locomocao():
@@ -62,13 +61,13 @@ class Locomocao():
         print("[r-run] [s-stop] [f-forward] [b-backward] [l-low] [m-medium] [h-high] [e-exit]")
         print("\n")
 
-    def speed(self, speed=0):
+    def speed(self, speed=100):
         """Define a velocidade do robô"""
         #por enquanto a velocidade esta setada para 50
         print("Velocidade das rodas configuradas para: ",speed)
         self.speedRodas = speed
-        self.motor1.ChangeDutyCycle(50)
-        self.motor2.ChangeDutyCycle(50)
+        self.motor1.ChangeDutyCycle(self.speedRodas)
+        self.motor2.ChangeDutyCycle(self.speedRodas)
 
     def forward(self):
         """Move o robo para frente"""
@@ -77,15 +76,16 @@ class Locomocao():
         GPIO.output(self.in2,GPIO.LOW)
         GPIO.output(self.in3,GPIO.HIGH)
         GPIO.output(self.in4,GPIO.LOW)
-        sleep(2)
+        sleep(3)
 
     def backward(self):
         """Move o robo para traz"""
+        print("backward")
         GPIO.output(self.in1,GPIO.LOW)
         GPIO.output(self.in2,GPIO.HIGH)
         GPIO.output(self.in3,GPIO.LOW)
         GPIO.output(self.in4,GPIO.HIGH)
-        sleep(2)
+        sleep(3)
 
     def stop(self):
         """Para o robo"""
@@ -94,10 +94,10 @@ class Locomocao():
         GPIO.output(self.in2,GPIO.LOW)
         GPIO.output(self.in3,GPIO.LOW)
         GPIO.output(self.in4,GPIO.LOW)
-        sleep(2)
 
     def controle(self, direcao):
         """Recebe a direção e chama os metodos ro robo"""
+        print("Direção: ", direcao)
         if(direcao == 1):
             self.forward()
         elif(direcao == 2):
@@ -106,8 +106,6 @@ class Locomocao():
             self.stop()
             #print("Comando não conhecido! Tente outra vez!")
             pass
-        
-        direcao=0       #Por segurança ele para
 
 def main():
     #garante o uso da variável global
@@ -126,7 +124,7 @@ def main():
     while (not rospy.is_shutdown()):
         try:
             locomocao.controle(globalDirecao)
-
+            
         except KeyboardInterrupt():
             print("Fim")
 
