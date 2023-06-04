@@ -7,6 +7,23 @@ comando para transferir diretórios
 sudo scp -r obelix rasp1@172.22.73.8:\catkin_ws/src
 
 comando transferir aqruivos
- sudo scp servo.py rasp1@172.22.73.8:\catkin_ws/src/obelix/src
+sudo scp servo.py rasp1@172.22.73.8:\catkin_ws/src/obelix/src
 
 source ~/catkin_ws/devel/setup.bash
+
+Ros multi machines
+ssh orin5@172.17.0.1
+ssh rasp1@172.22.73.8
+
+orin
+export ROS_MASTER_URI=http://172.22.74.224:11311
+export ROS_IP=172.17.0.1
+rosrun rospy_tutorials listener.py
+
+rasp
+export ROS_MASTER_URI=http://172.22.74.224:11311
+export ROS_IP=172.22.73.8
+rosrun rospy_tutorials talker.py
+
+instalação opencv https://littlebirdelectronics.com.au/guides/165/set-up-opencv-on-raspberry-pi-4
+instalação do cvbridge sudo apt-get ros-noetic-cv-bridge
