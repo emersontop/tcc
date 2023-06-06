@@ -32,6 +32,8 @@ class NodeCamera():
                 #Captura a imagem
 
                 validacao, frame = self.cam.read()
+                frame = cv2.resize(frame, (0,0), fx=0.25, fy=0.25)
+                #frame_cinza = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 #Converte a imagem para um formato que pode ser enviado
                 self.msgImagem = self.bridge.cv2_to_imgmsg(frame,"bgr8")
                 self.pubImagem.publish(self.msgImagem)
